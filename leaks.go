@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"strings"
 
-	"go.uber.org/goleak/internal/stack"
+	"github.com/tarunKoyalwar/goleak/internal/stack"
 )
 
 // TestingT is the minimal subset of testing.TB that we use.

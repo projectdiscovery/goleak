@@ -6,7 +6,7 @@ Goroutine leak detector to help avoid Goroutine leaks.
 
 You can use `go get` to get the latest version:
 
-`go get -u go.uber.org/goleak`
+`go get -u github.com/tarunKoyalwar/goleak`
 
 `goleak` also supports semver releases.
 
@@ -65,8 +65,8 @@ goleak is v1 and follows [SemVer](http://semver.org/) strictly.
 
 No breaking changes will be made to exported APIs before 2.0.
 
-[doc-img]: https://godoc.org/go.uber.org/goleak?status.svg
-[doc]: https://godoc.org/go.uber.org/goleak
+[doc-img]: https://godoc.org/github.com/tarunKoyalwar/goleak?status.svg
+[doc]: https://godoc.org/github.com/tarunKoyalwar/goleak
 [ci-img]: https://github.com/uber-go/goleak/actions/workflows/ci.yml/badge.svg
 [ci]: https://github.com/uber-go/goleak/actions/workflows/ci.yml
 [cov-img]: https://codecov.io/gh/uber-go/goleak/branch/master/graph/badge.svg
