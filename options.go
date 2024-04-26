@@ -96,20 +96,37 @@ func ignoreAnyFunctionMatching(regex string) Option {
 	})
 }
 
-// IgnoreAnyContainingPackage ignores goroutines where any function
-// contains the specified package name.
-// package name should be fully qualified, e.g., go.uber.org/goleak
-// Note: you are not expected to escape the package name.
-func IgnoreAnyContainingPackage(pkg string) Option {
+// IgnoreAnyContainingPkg creates an option that filters out goroutines
+// if any function in their stack trace includes the specified package name.
+// The package name must be fully qualified, such as "go.uber.org/goleak".
+// Note: The package name does not require escaping in this context.
+func IgnoreAnyContainingPkg(pkg string) Option {
 	return ignoreAnyFunctionMatching(`\Q` + pkg + `.\E.+`)
 }
 
-// IgnoreAnyContainingStruct ignores goroutines where any function
-// contains the specified struct name.
-// struct name should be fully qualified, e.g., go.uber.org/goleak.(*MyType)
-// Note: you are not expected to escape the struct name.
+// IgnoreAnyContainingStruct provides an option to filter out goroutines based on the presence of a specified struct
+// in any function within their stack trace. The struct name must be fully qualified, such as "go.uber.org/goleak.(*MyType)".
+// Note: The struct name should be used as is without any need for escaping special characters.
 func IgnoreAnyContainingStruct(str string) Option {
 	return ignoreAnyFunctionMatching(`\Q` + str + `.\E.+`)
+}
+
+// IncludeAllContainingPkg filters goroutines to only include those where any function
+// contains the specified package name. This is useful for focusing on goroutines
+// originating from specific packages, particularly in unit tests.
+//
+// The package name must be fully qualified, e.g., "go.uber.org/goleak".
+//
+// Example use case:
+// This function can be used to focus on goroutines that are relevant to the user's
+// own packages, excluding those from third-party packages.
+func IncludeAllContainingPkg(pkg string) Option {
+	return addFilter(func(s stack.Stack) bool {
+		// Construct a regex pattern that matches the fully qualified package name
+		// and checks if any function in the stack trace includes this package.
+		pattern := `\Q` + pkg + `.\E.+`
+		return s.MatchAnyFunction(pattern)
+	})
 }
 
 // Cleanup sets up a cleanup function that will be executed at the
@@ -159,6 +176,17 @@ func buildOpts(options ...Option) *opts {
 		isStdLibStack,
 		isTraceStack,
 	)
+	for _, option := range options {
+		option.apply(opts)
+	}
+	return opts
+}
+
+func buildOnlyOpts(options ...Option) *opts {
+	opts := &opts{
+		maxRetries: _defaultRetries,
+		maxSleep:   100 * time.Millisecond,
+	}
 	for _, option := range options {
 		option.apply(opts)
 	}

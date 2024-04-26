@@ -88,9 +88,26 @@ func TestOptionsIgnoreAnyFunction(t *testing.T) {
 	}
 }
 
-func TestOptionsIgnoreAnyContaining(t *testing.T) {
+func TestOptionsIgnoreAnyContainingPkg(t *testing.T) {
 	cur := stack.Current()
-	opts := buildOpts(IgnoreAnyContainingPackage("go.uber.org/goleak"))
+	opts := buildOnlyOpts(IgnoreAnyContainingPkg("testing"))
+
+	for _, s := range stack.All() {
+		if s.ID() == cur.ID() {
+			continue
+		}
+
+		if opts.filter(s) {
+			continue
+		}
+
+		t.Errorf("Unexpected goroutine: %v", s)
+	}
+}
+
+func TestOptionsIncludeAllContainingPkg(t *testing.T) {
+	cur := stack.Current()
+	opts := buildOnlyOpts(IncludeAllContainingPkg("testing"))
 
 	for _, s := range stack.All() {
 		if s.ID() == cur.ID() {
@@ -107,7 +124,7 @@ func TestOptionsIgnoreAnyContaining(t *testing.T) {
 
 func TestOptionsIgnoreAnyContainingStruct(t *testing.T) {
 	cur := stack.Current()
-	opts := buildOpts(IgnoreAnyContainingStruct("go.uber.org/goleak.(*blockedG)"))
+	opts := buildOnlyOpts(IgnoreAnyContainingStruct("testing.(*M)"))
 
 	for _, s := range stack.All() {
 		if s.ID() == cur.ID() {
