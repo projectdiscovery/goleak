@@ -83,6 +83,35 @@ func IgnoreAnyFunction(f string) Option {
 	})
 }
 
+// ignoreAnyFunctionMatching ignores goroutines where any function
+// matches the specified regular expression.
+//
+// The accuracy depends on the regular expression. That is why given regex
+// should be as specific as possible.
+// One should use IgnoreAnyContainingPackage or IgnoreAnyContainingStruct
+// instead of this function if possible.
+func ignoreAnyFunctionMatching(regex string) Option {
+	return addFilter(func(s stack.Stack) bool {
+		return s.MatchAnyFunction(regex)
+	})
+}
+
+// IgnoreAnyContainingPackage ignores goroutines where any function
+// contains the specified package name.
+// package name should be fully qualified, e.g., go.uber.org/goleak
+// Note: you are not expected to escape the package name.
+func IgnoreAnyContainingPackage(pkg string) Option {
+	return ignoreAnyFunctionMatching(`\Q` + pkg + `.\E.+`)
+}
+
+// IgnoreAnyContainingStruct ignores goroutines where any function
+// contains the specified struct name.
+// struct name should be fully qualified, e.g., go.uber.org/goleak.(*MyType)
+// Note: you are not expected to escape the struct name.
+func IgnoreAnyContainingStruct(str string) Option {
+	return ignoreAnyFunctionMatching(`\Q` + str + `.\E.+`)
+}
+
 // Cleanup sets up a cleanup function that will be executed at the
 // end of the leak check.
 // When passed to [VerifyTestMain], the exit code passed to cleanupFunc

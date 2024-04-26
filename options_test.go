@@ -88,6 +88,40 @@ func TestOptionsIgnoreAnyFunction(t *testing.T) {
 	}
 }
 
+func TestOptionsIgnoreAnyContaining(t *testing.T) {
+	cur := stack.Current()
+	opts := buildOpts(IgnoreAnyContainingPackage("go.uber.org/goleak"))
+
+	for _, s := range stack.All() {
+		if s.ID() == cur.ID() {
+			continue
+		}
+
+		if opts.filter(s) {
+			continue
+		}
+
+		t.Errorf("Unexpected goroutine: %v", s)
+	}
+}
+
+func TestOptionsIgnoreAnyContainingStruct(t *testing.T) {
+	cur := stack.Current()
+	opts := buildOpts(IgnoreAnyContainingStruct("go.uber.org/goleak.(*blockedG)"))
+
+	for _, s := range stack.All() {
+		if s.ID() == cur.ID() {
+			continue
+		}
+
+		if opts.filter(s) {
+			continue
+		}
+
+		t.Errorf("Unexpected goroutine: %v", s)
+	}
+}
+
 func TestOptionsRetry(t *testing.T) {
 	opts := buildOpts()
 	opts.maxRetries = 50 // initial attempt + 50 retries = 11

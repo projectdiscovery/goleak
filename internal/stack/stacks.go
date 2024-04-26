@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -72,6 +73,18 @@ func (s Stack) FirstFunction() string {
 func (s Stack) HasFunction(name string) bool {
 	_, ok := s.allFunctions[name]
 	return ok
+}
+
+// MatchAnyFunction reports whether the stack has any matching function
+// for given regex anywhere
+func (s Stack) MatchAnyFunction(regex string) bool {
+	re := regexp.MustCompile(regex)
+	for name := range s.allFunctions {
+		if re.MatchString(name) {
+			return true
+		}
+	}
+	return false
 }
 
 func (s Stack) String() string {
