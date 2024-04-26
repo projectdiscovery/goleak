@@ -111,13 +111,6 @@ func FindAndPrettyPrint(options ...Option) error {
 		sb.WriteString(s.PrettyPrint(opts.filters...))
 	}
 
-	// add more definitions
-	for _, s := range stacks {
-		if _, ok := defs[s.SourceGoroutineID()]; !ok {
-			defs[s.SourceGoroutineID()] = s.SourceEntry()
-		}
-	}
-
 	g := &strings.Builder{}
 
 	g.WriteString("[*] found unexpected goroutines:\n")
