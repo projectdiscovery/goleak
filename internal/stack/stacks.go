@@ -29,9 +29,28 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/logrusorgru/aurora/v4"
 )
 
 const _defaultBufferSize = 64 * 1024 // 64 KiB
+
+var (
+	// Colors is an aurora instance with colors enabled.
+	Colors = aurora.New(aurora.WithColors(true))
+	// sourceGoroutineRe is a regexp to match the goroutine ID in a "created by" line.
+	sourceGoroutineRe = regexp.MustCompile(`goroutine (\d+)`)
+)
+
+// Entry represents a single entry in a Goroutine's stack.
+type Entry struct {
+	// function call as it appears in the stack trace
+	funcCall string
+	// location of the function call
+	location string
+	// isSourceEntry is true if the entry is a source entry
+	isSourceEntry bool
+}
 
 // Stack represents a single Goroutine's stack.
 type Stack struct {
@@ -46,6 +65,9 @@ type Stack struct {
 
 	// Full, raw stack trace.
 	fullStack string
+
+	// entries is a list of stack entries
+	entries []Entry
 }
 
 // ID returns the goroutine ID.
@@ -87,10 +109,89 @@ func (s Stack) MatchAnyFunction(regex string) bool {
 	return false
 }
 
+// String returns a string representation of the stack.
 func (s Stack) String() string {
 	return fmt.Sprintf(
 		"Goroutine %v in state %v, with %v on top of the stack:\n%s",
 		s.id, s.state, s.firstFunction, s.Full())
+}
+
+// SourceGoroutineID returns the goroutine ID of the source goroutine
+func (s Stack) SourceGoroutineID() int {
+	for _, entry := range s.entries {
+		if entry.isSourceEntry {
+			matches := sourceGoroutineRe.FindStringSubmatch(entry.funcCall)
+			if len(matches) == 2 {
+				id, err := strconv.Atoi(matches[1])
+				if err == nil {
+					return id
+				}
+			}
+		}
+	}
+	return -1
+}
+
+// SourceEntry returns the source entry of the stack
+func (s Stack) SourceEntry() Entry {
+	for _, entry := range s.entries {
+		if entry.isSourceEntry {
+			return entry
+		}
+	}
+	return Entry{}
+}
+
+// PrettyPrint generates a formatted string representation of the stack and uses given filters
+// to highlight any matching entries.
+func (s Stack) PrettyPrint(filter ...func(s Stack) bool) string {
+	var buff strings.Builder
+
+	// Identify the source entry if present
+	var source *Entry
+	for _, entry := range s.entries {
+		if entry.isSourceEntry {
+			source = &entry
+			break
+		}
+	}
+
+	// Append basic stack information
+	buff.WriteString("\n")
+	buff.WriteString(Colors.BrightBlue("Goroutine ID").String() + ": " + Colors.BrightYellow(s.id).String() + "\n")
+	buff.WriteString(Colors.BrightBlue("State").String() + ": " + Colors.BrightYellow(s.state).String() + "\n")
+
+	// Append source or first function information
+	if source != nil {
+		buff.WriteString(Colors.BrightBlue("Source Goroutine ID").String() + ": " + Colors.BrightRed(sourceGoroutineRe.FindStringSubmatch(source.funcCall)[1]).String() + "\n")
+		buff.WriteString(Colors.BrightBlue("Created At").String() + ": " + Colors.BrightRed(strings.TrimPrefix(source.funcCall, "created by ")).String() + "\n")
+		buff.WriteString(Colors.BrightBlue("Location").String() + ": " + Colors.BrightRed(strings.TrimSpace(source.location)).String() + "\n")
+	} else {
+		buff.WriteString(Colors.BrightBlue("First Function").String() + ": " + Colors.BrightRed(s.firstFunction).String() + "\n")
+	}
+
+	// Append the full stack trace header
+	buff.WriteString(Colors.BrightBlue("Full Stack").String() + ": " + "\n\n")
+
+	// Append each stack entry, applying filters if provided
+	for _, entry := range s.entries {
+		matched := false
+		for _, f := range filter {
+			if f(s) {
+				matched = true
+				break
+			}
+		}
+		if matched {
+			buff.WriteString(Colors.BrightGreen(entry.funcCall).String() + "\n")
+			buff.WriteString(Colors.BrightGreen(entry.location).String() + "\n")
+		} else {
+			buff.WriteString(entry.funcCall + "\n")
+			buff.WriteString(entry.location + "\n")
+		}
+	}
+	buff.WriteString("\n")
+	return buff.String()
 }
 
 func getStacks(all bool) []Stack {
@@ -152,6 +253,9 @@ func (p *stackParser) parseStack(line string) (Stack, error) {
 		fullStack     bytes.Buffer
 	)
 	funcs := make(map[string]struct{})
+	entries := make([]Entry, 0)
+	currentEntry := Entry{}
+
 	for p.scan.Scan() {
 		line := p.scan.Text()
 		if strings.HasPrefix(line, "goroutine ") {
@@ -183,6 +287,7 @@ func (p *stackParser) parseStack(line string) (Stack, error) {
 		if err != nil {
 			return Stack{}, fmt.Errorf("parse function: %w", err)
 		}
+		currentEntry.funcCall = line
 		if !creator {
 			// A function is part of a goroutine's stack
 			// only if it's not a "created by" function.
@@ -193,7 +298,8 @@ func (p *stackParser) parseStack(line string) (Stack, error) {
 			if firstFunction == "" {
 				firstFunction = funcName
 			}
-
+		} else {
+			currentEntry.isSourceEntry = true
 		}
 
 		// The function name followed by a line in the form:
@@ -206,6 +312,8 @@ func (p *stackParser) parseStack(line string) (Stack, error) {
 			// Skip the line only if it starts with a tab.
 			bs := p.scan.Bytes()
 			if len(bs) > 0 && bs[0] == '\t' {
+				currentEntry.location = string(bs)
+				entries = append(entries, currentEntry)
 				fullStack.Write(bs)
 				fullStack.WriteByte('\n')
 			} else {
@@ -241,6 +349,7 @@ func (p *stackParser) parseStack(line string) (Stack, error) {
 		firstFunction: firstFunction,
 		allFunctions:  funcs,
 		fullStack:     fullStack.String(),
+		entries:       entries,
 	}, nil
 }
 

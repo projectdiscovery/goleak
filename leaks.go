@@ -23,6 +23,7 @@ package goleak
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"go.uber.org/goleak/internal/stack"
 )
@@ -73,6 +74,53 @@ func Find(options ...Option) error {
 	return fmt.Errorf("found unexpected goroutines:\n%s", stacks)
 }
 
+// FindAndPrettyPrint looks for extra goroutines, and returns a descriptive error if
+// any are found. It will also print a pretty graph of the goroutines.
+func FindAndPrettyPrint(options ...Option) error {
+	cur := stack.Current().ID()
+
+	opts := buildOpts(options...)
+	if opts.cleanup != nil {
+		return errors.New("Cleanup can only be passed to VerifyNone or VerifyTestMain")
+	}
+	var stacks []stack.Stack
+	retry := true
+	for i := 0; retry; i++ {
+		stacks = filterStacks(stack.All(), cur, opts)
+
+		if len(stacks) == 0 {
+			return nil
+		}
+		retry = opts.retry(i)
+	}
+
+	var sb strings.Builder
+	// sb.WriteString(" [-] found unexpected goroutines:\n")
+
+	// current -> source
+	dependency := map[int]int{}
+	defs := map[int]stack.Entry{}
+
+	for _, s := range stacks {
+		dependency[s.ID()] = s.SourceGoroutineID()
+		defs[s.ID()] = s.SourceEntry()
+		sb.WriteString(s.PrettyPrint(opts.filters...))
+	}
+
+	g := &strings.Builder{}
+
+	g.WriteString("[*] found unexpected goroutines:\n")
+
+	g.WriteString("[-] " + stack.Colors.BrightBlue("Dependency Graph").String() + ":\n\n")
+	graph := stack.BuildGraph(dependency)
+	stack.PrintGraph(g, graph, defs)
+
+	g.WriteString("\n-> " + stack.Colors.BrightMagenta("Goroutines").String() + ":\n\n")
+	g.WriteString(sb.String())
+
+	return fmt.Errorf(g.String())
+}
+
 type testHelper interface {
 	Helper()
 }
@@ -98,8 +146,14 @@ func VerifyNone(t TestingT, options ...Option) {
 		h.Helper()
 	}
 
-	if err := Find(opts); err != nil {
-		t.Error(err)
+	if opts.pretty {
+		if err := FindAndPrettyPrint(opts); err != nil {
+			t.Error(err)
+		}
+	} else {
+		if err := Find(opts); err != nil {
+			t.Error(err)
+		}
 	}
 
 	if cleanup != nil {

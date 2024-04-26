@@ -42,6 +42,7 @@ type opts struct {
 	maxRetries int
 	maxSleep   time.Duration
 	cleanup    func(int)
+	pretty     bool
 }
 
 // implement apply so that opts struct itself can be used as
@@ -64,6 +65,13 @@ func (f optionFunc) apply(opts *opts) { f(opts) }
 func IgnoreTopFunction(f string) Option {
 	return addFilter(func(s stack.Stack) bool {
 		return s.FirstFunction() == f
+	})
+}
+
+// Pretty sets the output of the leak check to be more human-readable.
+func Pretty() Option {
+	return optionFunc(func(opts *opts) {
+		opts.pretty = true
 	})
 }
 
