@@ -94,6 +94,10 @@ func FindAndPrettyPrint(options ...Option) error {
 		retry = opts.retry(i)
 	}
 
+	if len(stacks) == 0 {
+		return nil
+	}
+
 	var sb strings.Builder
 	// sb.WriteString(" [-] found unexpected goroutines:\n")
 
@@ -105,6 +109,13 @@ func FindAndPrettyPrint(options ...Option) error {
 		dependency[s.ID()] = s.SourceGoroutineID()
 		defs[s.ID()] = s.SourceEntry()
 		sb.WriteString(s.PrettyPrint(opts.filters...))
+	}
+
+	// add more definitions
+	for _, s := range stacks {
+		if _, ok := defs[s.SourceGoroutineID()]; !ok {
+			defs[s.SourceGoroutineID()] = s.SourceEntry()
+		}
 	}
 
 	g := &strings.Builder{}

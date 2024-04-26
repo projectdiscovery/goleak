@@ -45,11 +45,11 @@ var (
 // Entry represents a single entry in a Goroutine's stack.
 type Entry struct {
 	// function call as it appears in the stack trace
-	funcCall string
-	// location of the function call
-	location string
-	// isSourceEntry is true if the entry is a source entry
-	isSourceEntry bool
+	FunctionCall string
+	// Location of the function call
+	Location string
+	// IsSource is true if the entry is a source entry
+	IsSource bool
 }
 
 // Stack represents a single Goroutine's stack.
@@ -119,8 +119,8 @@ func (s Stack) String() string {
 // SourceGoroutineID returns the goroutine ID of the source goroutine
 func (s Stack) SourceGoroutineID() int {
 	for _, entry := range s.entries {
-		if entry.isSourceEntry {
-			matches := sourceGoroutineRe.FindStringSubmatch(entry.funcCall)
+		if entry.IsSource {
+			matches := sourceGoroutineRe.FindStringSubmatch(entry.FunctionCall)
 			if len(matches) == 2 {
 				id, err := strconv.Atoi(matches[1])
 				if err == nil {
@@ -135,7 +135,7 @@ func (s Stack) SourceGoroutineID() int {
 // SourceEntry returns the source entry of the stack
 func (s Stack) SourceEntry() Entry {
 	for _, entry := range s.entries {
-		if entry.isSourceEntry {
+		if entry.IsSource {
 			return entry
 		}
 	}
@@ -150,7 +150,7 @@ func (s Stack) PrettyPrint(filter ...func(s Stack) bool) string {
 	// Identify the source entry if present
 	var source *Entry
 	for _, entry := range s.entries {
-		if entry.isSourceEntry {
+		if entry.IsSource {
 			source = &entry
 			break
 		}
@@ -163,9 +163,9 @@ func (s Stack) PrettyPrint(filter ...func(s Stack) bool) string {
 
 	// Append source or first function information
 	if source != nil {
-		buff.WriteString(Colors.BrightBlue("Source Goroutine ID").String() + ": " + Colors.BrightRed(sourceGoroutineRe.FindStringSubmatch(source.funcCall)[1]).String() + "\n")
-		buff.WriteString(Colors.BrightBlue("Created At").String() + ": " + Colors.BrightRed(strings.TrimPrefix(source.funcCall, "created by ")).String() + "\n")
-		buff.WriteString(Colors.BrightBlue("Location").String() + ": " + Colors.BrightRed(strings.TrimSpace(source.location)).String() + "\n")
+		buff.WriteString(Colors.BrightBlue("Source Goroutine ID").String() + ": " + Colors.BrightRed(sourceGoroutineRe.FindStringSubmatch(source.FunctionCall)[1]).String() + "\n")
+		buff.WriteString(Colors.BrightBlue("Created At").String() + ": " + Colors.BrightRed(strings.TrimPrefix(source.FunctionCall, "created by ")).String() + "\n")
+		buff.WriteString(Colors.BrightBlue("Location").String() + ": " + Colors.BrightRed(strings.TrimSpace(source.Location)).String() + "\n")
 	} else {
 		buff.WriteString(Colors.BrightBlue("First Function").String() + ": " + Colors.BrightRed(s.firstFunction).String() + "\n")
 	}
@@ -183,11 +183,11 @@ func (s Stack) PrettyPrint(filter ...func(s Stack) bool) string {
 			}
 		}
 		if matched {
-			buff.WriteString(Colors.BrightGreen(entry.funcCall).String() + "\n")
-			buff.WriteString(Colors.BrightGreen(entry.location).String() + "\n")
+			buff.WriteString(Colors.BrightGreen(entry.FunctionCall).String() + "\n")
+			buff.WriteString(Colors.BrightGreen(entry.Location).String() + "\n")
 		} else {
-			buff.WriteString(entry.funcCall + "\n")
-			buff.WriteString(entry.location + "\n")
+			buff.WriteString(entry.FunctionCall + "\n")
+			buff.WriteString(entry.Location + "\n")
 		}
 	}
 	buff.WriteString("\n")
@@ -204,6 +204,11 @@ func getStacks(all bool) []Stack {
 		panic(fmt.Sprintf("Failed to parse stack trace: %v\n%s", err, trace))
 	}
 	return stacks
+}
+
+// ParseStack parses a stack trace from the given buffer.
+func ParseStack(buf []byte) ([]Stack, error) {
+	return newStackParser(bytes.NewReader(buf)).Parse()
 }
 
 type stackParser struct {
@@ -287,7 +292,7 @@ func (p *stackParser) parseStack(line string) (Stack, error) {
 		if err != nil {
 			return Stack{}, fmt.Errorf("parse function: %w", err)
 		}
-		currentEntry.funcCall = line
+		currentEntry.FunctionCall = line
 		if !creator {
 			// A function is part of a goroutine's stack
 			// only if it's not a "created by" function.
@@ -299,7 +304,7 @@ func (p *stackParser) parseStack(line string) (Stack, error) {
 				firstFunction = funcName
 			}
 		} else {
-			currentEntry.isSourceEntry = true
+			currentEntry.IsSource = true
 		}
 
 		// The function name followed by a line in the form:
@@ -312,7 +317,7 @@ func (p *stackParser) parseStack(line string) (Stack, error) {
 			// Skip the line only if it starts with a tab.
 			bs := p.scan.Bytes()
 			if len(bs) > 0 && bs[0] == '\t' {
-				currentEntry.location = string(bs)
+				currentEntry.Location = string(bs)
 				entries = append(entries, currentEntry)
 				fullStack.Write(bs)
 				fullStack.WriteByte('\n')

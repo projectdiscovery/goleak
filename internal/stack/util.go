@@ -32,10 +32,10 @@ func printSubGraph(buff *strings.Builder, node int, graph map[int][]int, prefix 
 
 	// Print the current node
 	if isLast {
-		buff.WriteString(fmt.Sprintf("%s└── %d (%s)\n", prefix, node, defs[node].funcCall))
+		buff.WriteString(fmt.Sprintf("%s└── %d (%s)\n", prefix, node, defs[node].FunctionCall))
 		prefix += "    "
 	} else {
-		buff.WriteString(fmt.Sprintf("%s├── %d (%s)\n", prefix, node, defs[node].funcCall))
+		buff.WriteString(fmt.Sprintf("%s├── %d (%s)\n", prefix, node, defs[node].FunctionCall))
 		prefix += "│   "
 	}
 
