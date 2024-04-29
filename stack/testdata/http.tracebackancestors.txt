@@ -1,8 +1,8 @@
 goroutine 1 [running]:
 main.getStackBuffer()
-	/home/abg/src/goleak/internal/stack/testdata/http.go:44 +0x49
+	/home/abg/src/goleak/stack/testdata/http.go:44 +0x49
 main.main()
-	/home/abg/src/goleak/internal/stack/testdata/http.go:18 +0x1d
+	/home/abg/src/goleak/stack/testdata/http.go:18 +0x1d
 
 goroutine 20 [IO wait]:
 internal/poll.runtime_pollWait(0x7c3a3d619e48, 0x72)
@@ -24,12 +24,12 @@ net/http.(*Server).Serve(0xc000078000, {0x738a20, 0xc0000ba0c0})
 net/http.Serve({0x738a20, 0xc0000ba0c0}, {0x0?, 0x0})
 	/usr/lib/go/src/net/http/server.go:2595 +0x6c
 created by main.start in goroutine 1
-	/home/abg/src/goleak/internal/stack/testdata/http.go:27 +0x87
+	/home/abg/src/goleak/stack/testdata/http.go:27 +0x87
 [originating from goroutine 1]:
 main.start(...)
-	/home/abg/src/goleak/internal/stack/testdata/http.go:30 +0x87
+	/home/abg/src/goleak/stack/testdata/http.go:30 +0x87
 main.main(...)
-	/home/abg/src/goleak/internal/stack/testdata/http.go:14 +0x13
+	/home/abg/src/goleak/stack/testdata/http.go:14 +0x13
 
 goroutine 24 [select]:
 net/http.(*persistConn).readLoop(0xc0000be480)
@@ -63,11 +63,11 @@ net/http.(*Client).Get(...)
 net/http.(*Client).Get(...)
 	/usr/lib/go/src/net/http/client.go:488 +0x60
 main.start(...)
-	/home/abg/src/goleak/internal/stack/testdata/http.go:32 +0x111
+	/home/abg/src/goleak/stack/testdata/http.go:32 +0x111
 main.start(...)
-	/home/abg/src/goleak/internal/stack/testdata/http.go:32 +0x112
+	/home/abg/src/goleak/stack/testdata/http.go:32 +0x112
 main.main(...)
-	/home/abg/src/goleak/internal/stack/testdata/http.go:14 +0x13
+	/home/abg/src/goleak/stack/testdata/http.go:14 +0x13
 
 goroutine 4 [IO wait]:
 internal/poll.runtime_pollWait(0x7c3a3d619d50, 0x72)
@@ -98,12 +98,12 @@ net/http.(*Server).Serve(...)
 net/http.Serve(...)
 	/usr/lib/go/src/net/http/server.go:2595 +0x6c
 created by main.start
-	/home/abg/src/goleak/internal/stack/testdata/http.go:27 +0x87
+	/home/abg/src/goleak/stack/testdata/http.go:27 +0x87
 [originating from goroutine 1]:
 main.start(...)
-	/home/abg/src/goleak/internal/stack/testdata/http.go:30 +0x87
+	/home/abg/src/goleak/stack/testdata/http.go:30 +0x87
 main.main(...)
-	/home/abg/src/goleak/internal/stack/testdata/http.go:14 +0x13
+	/home/abg/src/goleak/stack/testdata/http.go:14 +0x13
 
 goroutine 25 [select]:
 net/http.(*persistConn).writeLoop(0xc0000be480)
@@ -137,9 +137,9 @@ net/http.(*Client).Get(...)
 net/http.(*Client).Get(...)
 	/usr/lib/go/src/net/http/client.go:488 +0x60
 main.start(...)
-	/home/abg/src/goleak/internal/stack/testdata/http.go:32 +0x111
+	/home/abg/src/goleak/stack/testdata/http.go:32 +0x111
 main.start(...)
-	/home/abg/src/goleak/internal/stack/testdata/http.go:32 +0x112
+	/home/abg/src/goleak/stack/testdata/http.go:32 +0x112
 main.main(...)
-	/home/abg/src/goleak/internal/stack/testdata/http.go:14 +0x13
+	/home/abg/src/goleak/stack/testdata/http.go:14 +0x13
 

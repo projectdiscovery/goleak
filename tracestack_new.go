@@ -23,7 +23,7 @@
 
 package goleak
 
-import "github.com/tarunKoyalwar/goleak/internal/stack"
+import "github.com/tarunKoyalwar/goleak/stack"
 
 func isTraceStack(s stack.Stack) bool {
 	return s.HasFunction("runtime.ReadTrace")
