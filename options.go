@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"go.uber.org/goleak/internal/stack"
+	"github.com/tarunKoyalwar/goleak/stack"
 )
 
 // Option lets users specify custom verifications.
@@ -42,6 +42,7 @@ type opts struct {
 	maxRetries int
 	maxSleep   time.Duration
 	cleanup    func(int)
+	pretty     bool
 }
 
 // implement apply so that opts struct itself can be used as
@@ -60,10 +61,17 @@ func (f optionFunc) apply(opts *opts) { f(opts) }
 
 // IgnoreTopFunction ignores any goroutines where the specified function
 // is at the top of the stack. The function name should be fully qualified,
-// e.g., go.uber.org/goleak.IgnoreTopFunction
+// e.g., github.com/tarunKoyalwar/goleak.IgnoreTopFunction
 func IgnoreTopFunction(f string) Option {
 	return addFilter(func(s stack.Stack) bool {
 		return s.FirstFunction() == f
+	})
+}
+
+// Pretty sets the output of the leak check to be more human-readable.
+func Pretty() Option {
+	return optionFunc(func(opts *opts) {
+		opts.pretty = true
 	})
 }
 
@@ -72,14 +80,60 @@ func IgnoreTopFunction(f string) Option {
 //
 // The function name must be fully qualified, e.g.,
 //
-//	go.uber.org/goleak.IgnoreAnyFunction
+//	github.com/tarunKoyalwar/goleak.IgnoreAnyFunction
 //
 // For methods, the fully qualified form looks like:
 //
-//	go.uber.org/goleak.(*MyType).MyMethod
+//	github.com/tarunKoyalwar/goleak.(*MyType).MyMethod
 func IgnoreAnyFunction(f string) Option {
 	return addFilter(func(s stack.Stack) bool {
 		return s.HasFunction(f)
+	})
+}
+
+// ignoreAnyFunctionMatching ignores goroutines where any function
+// matches the specified regular expression.
+//
+// The accuracy depends on the regular expression. That is why given regex
+// should be as specific as possible.
+// One should use IgnoreAnyContainingPackage or IgnoreAnyContainingStruct
+// instead of this function if possible.
+func ignoreAnyFunctionMatching(regex string) Option {
+	return addFilter(func(s stack.Stack) bool {
+		return s.MatchAnyFunction(regex)
+	})
+}
+
+// IgnoreAnyContainingPkg creates an option that filters out goroutines
+// if any function in their stack trace includes the specified package name.
+// The package name must be fully qualified, such as "github.com/tarunKoyalwar/goleak".
+// Note: The package name does not require escaping in this context.
+func IgnoreAnyContainingPkg(pkg string) Option {
+	return ignoreAnyFunctionMatching(`\Q` + pkg + `.\E.+`)
+}
+
+// IgnoreAnyContainingStruct provides an option to filter out goroutines based on the presence of a specified struct
+// in any function within their stack trace. The struct name must be fully qualified, such as "github.com/tarunKoyalwar/goleak.(*MyType)".
+// Note: The struct name should be used as is without any need for escaping special characters.
+func IgnoreAnyContainingStruct(str string) Option {
+	return ignoreAnyFunctionMatching(`\Q` + str + `.\E.+`)
+}
+
+// IncludeAllContainingPkg filters goroutines to only include those where any function
+// contains the specified package name. This is useful for focusing on goroutines
+// originating from specific packages, particularly in unit tests.
+//
+// The package name must be fully qualified, e.g., "github.com/tarunKoyalwar/goleak".
+//
+// Example use case:
+// This function can be used to focus on goroutines that are relevant to the user's
+// own packages, excluding those from third-party packages.
+func IncludeAllContainingPkg(pkg string) Option {
+	return addFilter(func(s stack.Stack) bool {
+		// Construct a regex pattern that matches the fully qualified package name
+		// and checks if any function in the stack trace includes this package.
+		pattern := `\Q` + pkg + `.\E.+`
+		return s.MatchAnyFunction(pattern)
 	})
 }
 
@@ -130,6 +184,17 @@ func buildOpts(options ...Option) *opts {
 		isStdLibStack,
 		isTraceStack,
 	)
+	for _, option := range options {
+		option.apply(opts)
+	}
+	return opts
+}
+
+func buildOnlyOpts(options ...Option) *opts {
+	opts := &opts{
+		maxRetries: _defaultRetries,
+		maxSleep:   100 * time.Millisecond,
+	}
 	for _, option := range options {
 		option.apply(opts)
 	}
@@ -195,8 +260,4 @@ func isStdLibStack(s stack.Stack) bool {
 
 	// Using signal.Notify will start a runtime goroutine.
 	return s.HasFunction("runtime.ensureSigM")
-}
-
-func isTraceStack(s stack.Stack) bool {
-	return s.HasFunction("runtime.ReadTrace")
 }

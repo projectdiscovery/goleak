@@ -1,8 +1,8 @@
 goroutine 1 [running]:
 main.getStackBuffer()
-	/home/abg/src/goleak/internal/stack/testdata/http.go:44 +0x49
+	/home/abg/src/goleak/stack/testdata/http.go:44 +0x49
 main.main()
-	/home/abg/src/goleak/internal/stack/testdata/http.go:18 +0x1d
+	/home/abg/src/goleak/stack/testdata/http.go:18 +0x1d
 
 goroutine 4 [IO wait]:
 internal/poll.runtime_pollWait(0x7bf130ae7ea0, 0x72)
@@ -24,7 +24,7 @@ net/http.(*Server).Serve(0xc00008c000, {0x738a20, 0xc0000600e0})
 net/http.Serve({0x738a20, 0xc0000600e0}, {0x0?, 0x0})
 	/usr/lib/go/src/net/http/server.go:2595 +0x6c
 created by main.start in goroutine 1
-	/home/abg/src/goleak/internal/stack/testdata/http.go:27 +0x87
+	/home/abg/src/goleak/stack/testdata/http.go:27 +0x87
 
 goroutine 20 [select]:
 net/http.(*persistConn).readLoop(0xc000112480)

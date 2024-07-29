@@ -1,5 +1,5 @@
-// Copyright (c) 2018 Uber Technologies, Inc.
-
+// Copyright (c) 2021-2023 Uber Technologies, Inc.
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
@@ -18,5 +18,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// Package goleak is a Goroutine leak detector.
-package goleak // import "github.com/tarunKoyalwar/goleak"
+//go:build go1.16
+// +build go1.16
+
+package goleak
+
+import "github.com/tarunKoyalwar/goleak/stack"
+
+func isTraceStack(s stack.Stack) bool {
+	return s.HasFunction("runtime.ReadTrace")
+}
