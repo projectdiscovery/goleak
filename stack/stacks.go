@@ -97,6 +97,18 @@ func (s Stack) HasFunction(name string) bool {
 	return ok
 }
 
+func (s Stack) MatchAnyEntry(regex string) bool {
+	escapedRegex := regexp.QuoteMeta(regex)
+	re := regexp.MustCompile(escapedRegex)
+
+	for _, entry := range s.entries {
+		if re.MatchString(entry.FunctionCall) {
+			return true
+		}
+	}
+	return false
+}
+
 // MatchAnyFunction reports whether the stack has any matching function
 // for given regex anywhere
 func (s Stack) MatchAnyFunction(regex string) bool {

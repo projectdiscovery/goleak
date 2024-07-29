@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tarunKoyalwar/goleak/stack"
+	"github.com/projectdiscovery/goleak/stack"
 )
 
 // Option lets users specify custom verifications.
@@ -88,6 +88,12 @@ func Pretty() Option {
 func IgnoreAnyFunction(f string) Option {
 	return addFilter(func(s stack.Stack) bool {
 		return s.HasFunction(f)
+	})
+}
+
+func IgnoreAnyEntry(e string) Option {
+	return addFilter(func(s stack.Stack) bool {
+		return s.MatchAnyEntry(e)
 	})
 }
 
