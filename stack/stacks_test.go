@@ -74,7 +74,7 @@ func TestAll(t *testing.T) {
 	assert.Contains(t, got[0].allFunctions, "testing.(*T).Run")
 
 	assert.Contains(t, got[1].Full(), "TestAll")
-	assert.Contains(t, got[1].allFunctions, "github.com/tarunKoyalwar/goleak/stack.TestAll")
+	assert.Contains(t, got[1].allFunctions, "github.com/projectdiscovery/goleak/stack.TestAll")
 
 	for i := 0; i < 5; i++ {
 		assert.Contains(t, got[2+i].Full(), "stack.waitForDone")
@@ -82,12 +82,12 @@ func TestAll(t *testing.T) {
 }
 
 func TestCurrent(t *testing.T) {
-	const pkgPrefix = "github.com/tarunKoyalwar/goleak/stack"
+	const pkgPrefix = "github.com/projectdiscovery/goleak/stack"
 
 	got := Current()
 	assert.NotZero(t, got.ID(), "Should get non-zero goroutine id")
 	assert.Equal(t, "running", got.State())
-	assert.Equal(t, "github.com/tarunKoyalwar/goleak/stack.getStackBuffer", got.FirstFunction())
+	assert.Equal(t, "github.com/projectdiscovery/goleak/stack.getStackBuffer", got.FirstFunction())
 
 	wantFrames := []string{
 		"getStackBuffer",
@@ -126,12 +126,12 @@ func TestCurrentCreatedBy(t *testing.T) {
 
 	// The test function created the goroutine
 	// so it won't be part of the stack.
-	assert.False(t, stack.HasFunction("github.com/tarunKoyalwar/goleak/stack.TestCurrentCreatedBy"),
+	assert.False(t, stack.HasFunction("github.com/projectdiscovery/goleak/stack.TestCurrentCreatedBy"),
 		"TestCurrentCreatedBy should not be in stack:\n%s", stack.Full())
 
 	// However, the nested function should be.
 	assert.True(t,
-		stack.HasFunction("github.com/tarunKoyalwar/goleak/stack.TestCurrentCreatedBy.func1"),
+		stack.HasFunction("github.com/projectdiscovery/goleak/stack.TestCurrentCreatedBy.func1"),
 		"TestCurrentCreatedBy.func1 is not in stack:\n%s", stack.Full())
 }
 

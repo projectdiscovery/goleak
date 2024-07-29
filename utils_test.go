@@ -25,7 +25,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tarunKoyalwar/goleak/stack"
+	"github.com/projectdiscovery/goleak/stack"
 )
 
 type blockedG struct {

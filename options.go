@@ -61,7 +61,7 @@ func (f optionFunc) apply(opts *opts) { f(opts) }
 
 // IgnoreTopFunction ignores any goroutines where the specified function
 // is at the top of the stack. The function name should be fully qualified,
-// e.g., github.com/tarunKoyalwar/goleak.IgnoreTopFunction
+// e.g., github.com/projectdiscovery/goleak.IgnoreTopFunction
 func IgnoreTopFunction(f string) Option {
 	return addFilter(func(s stack.Stack) bool {
 		return s.FirstFunction() == f
@@ -80,11 +80,11 @@ func Pretty() Option {
 //
 // The function name must be fully qualified, e.g.,
 //
-//	github.com/tarunKoyalwar/goleak.IgnoreAnyFunction
+//	github.com/projectdiscovery/goleak.IgnoreAnyFunction
 //
 // For methods, the fully qualified form looks like:
 //
-//	github.com/tarunKoyalwar/goleak.(*MyType).MyMethod
+//	github.com/projectdiscovery/goleak.(*MyType).MyMethod
 func IgnoreAnyFunction(f string) Option {
 	return addFilter(func(s stack.Stack) bool {
 		return s.HasFunction(f)
@@ -112,14 +112,14 @@ func ignoreAnyFunctionMatching(regex string) Option {
 
 // IgnoreAnyContainingPkg creates an option that filters out goroutines
 // if any function in their stack trace includes the specified package name.
-// The package name must be fully qualified, such as "github.com/tarunKoyalwar/goleak".
+// The package name must be fully qualified, such as "github.com/projectdiscovery/goleak".
 // Note: The package name does not require escaping in this context.
 func IgnoreAnyContainingPkg(pkg string) Option {
 	return ignoreAnyFunctionMatching(`\Q` + pkg + `.\E.+`)
 }
 
 // IgnoreAnyContainingStruct provides an option to filter out goroutines based on the presence of a specified struct
-// in any function within their stack trace. The struct name must be fully qualified, such as "github.com/tarunKoyalwar/goleak.(*MyType)".
+// in any function within their stack trace. The struct name must be fully qualified, such as "github.com/projectdiscovery/goleak.(*MyType)".
 // Note: The struct name should be used as is without any need for escaping special characters.
 func IgnoreAnyContainingStruct(str string) Option {
 	return ignoreAnyFunctionMatching(`\Q` + str + `.\E.+`)
@@ -129,7 +129,7 @@ func IgnoreAnyContainingStruct(str string) Option {
 // contains the specified package name. This is useful for focusing on goroutines
 // originating from specific packages, particularly in unit tests.
 //
-// The package name must be fully qualified, e.g., "github.com/tarunKoyalwar/goleak".
+// The package name must be fully qualified, e.g., "github.com/projectdiscovery/goleak".
 //
 // Example use case:
 // This function can be used to focus on goroutines that are relevant to the user's

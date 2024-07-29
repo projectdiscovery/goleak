@@ -26,8 +26,8 @@ import (
 	"os/signal"
 	"testing"
 
+	"github.com/projectdiscovery/goleak"
 	"github.com/stretchr/testify/require"
-	"github.com/tarunKoyalwar/goleak"
 )
 
 func TestNoLeaks(t *testing.T) {

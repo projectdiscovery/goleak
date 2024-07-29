@@ -19,4 +19,4 @@
 // THE SOFTWARE.
 
 // Package goleak is a Goroutine leak detector.
-package goleak // import "github.com/tarunKoyalwar/goleak"
+package goleak // import "github.com/projectdiscovery/goleak"

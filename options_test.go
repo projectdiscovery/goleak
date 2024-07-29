@@ -24,9 +24,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/projectdiscovery/goleak/stack"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tarunKoyalwar/goleak/stack"
 )
 
 func TestOptionsFilters(t *testing.T) {
@@ -61,19 +61,19 @@ func TestOptionsFilters(t *testing.T) {
 	require.Equal(t, 1, countUnfiltered(), "Expected blockedG goroutine to not match any filter")
 
 	// If we add an extra filter to ignore blockTill, it shouldn't match.
-	opts = buildOpts(IgnoreTopFunction("github.com/tarunKoyalwar/goleak.(*blockedG).block"))
+	opts = buildOpts(IgnoreTopFunction("github.com/projectdiscovery/goleak.(*blockedG).block"))
 	require.Zero(t, countUnfiltered(), "blockedG should be filtered out. running: %v", stack.All())
 
 	// If we ignore startBlockedG, that should not ignore the blockedG goroutine
 	// because startBlockedG should be the "created by" function in the stack.
-	opts = buildOpts(IgnoreAnyFunction("github.com/tarunKoyalwar/goleak.startBlockedG"))
+	opts = buildOpts(IgnoreAnyFunction("github.com/projectdiscovery/goleak.startBlockedG"))
 	require.Equal(t, 1, countUnfiltered(),
 		"startBlockedG should not be filtered out. running: %v", stack.All())
 }
 
 func TestOptionsIgnoreAnyFunction(t *testing.T) {
 	cur := stack.Current()
-	opts := buildOpts(IgnoreAnyFunction("github.com/tarunKoyalwar/goleak.(*blockedG).run"))
+	opts := buildOpts(IgnoreAnyFunction("github.com/projectdiscovery/goleak.(*blockedG).run"))
 
 	for _, s := range stack.All() {
 		if s.ID() == cur.ID() {

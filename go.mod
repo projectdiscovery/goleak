@@ -1,4 +1,4 @@
-module github.com/tarunKoyalwar/goleak
+module github.com/projectdiscovery/goleak
 
 go 1.20
 
